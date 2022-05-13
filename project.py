@@ -58,6 +58,21 @@ def closeness_centrality(G, n, p):
         results[count] = closeness_centrality
         count += 1
 
+def N_max_elements(list, N):
+    result_list = []
+  
+    for i in range(0, N): 
+        maximum = 0
+          
+        for j in range(len(list)):     
+            if list[j] > maximum:
+                maximum = list[j]
+                  
+        list.remove(maximum)
+        result_list.append(maximum)
+          
+    return result_list
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     comm = MPI.COMM_WORLD
@@ -87,7 +102,7 @@ if __name__ == '__main__':
     # processor 0 prints nodes with top 5 centrality values to output.txt
     	file.write("Top 5 Closeness Centrality: ")
     	file.write("\n")
-    	top5 = Nmaxelements(closeness_centrality_array, 5)
+	top5 = N_max_elements(closeness_centrality_array, 5)
 
     	for j in range(len(top5)):
             file.write(top5[j])

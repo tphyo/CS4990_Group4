@@ -76,7 +76,7 @@ def N_max_elements(list, N):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     comm = MPI.COMM_WORLD
-   
+
     # input from the network
     s = comm.recv()
 
@@ -91,25 +91,24 @@ if __name__ == '__main__':
 
     # processor 0 prints closeness centrality for all nodes to output.txt
     if rank == 0:
-    	file.write("Closeness Centrality of all nodes: ")
-    	for i in range(len(closeness_centrality_array)):
+        file.write("Closeness Centrality of all nodes: ")
+        for i in range(len(closeness_centrality_array)):
             total += closeness_centrality_array[i];
             file.write(closeness_centrality_array[i])
             file.write("\n")
 
-    	average = total/len(closeness_centrality_array)
+        average = total/len(closeness_centrality_array)
 
-    # processor 0 prints nodes with top 5 centrality values to output.txt
-    	file.write("Top 5 Closeness Centrality: ")
-    	file.write("\n")
-	top5 = N_max_elements(closeness_centrality_array, 5)
-
-    	for j in range(len(top5)):
+        # processor 0 prints nodes with top 5 centrality values to output.txt
+        file.write("Top 5 Closeness Centrality: ")
+        file.write("\n")
+        top5 = N_max_elements(closeness_centrality_array, 5)
+        for j in range(len(top5)):
             file.write(top5[j])
             file.write("\n")
     # processor 0 prints average of all nodes' centrality values to output.txt
         file.write("Average of all nodes: ")
-    	file.write("\n")
-    	file.write(average)
-    	file.write("\n")
+        file.write("\n")
+        file.write(average)
+        file.write("\n")
 

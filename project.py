@@ -61,11 +61,17 @@ def closeness_centrality(G, n, p):
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     comm = MPI.COMM_WORLD
+   
     # input from the network
+    s = comm.recv()
 
     closeness_centrality(G, n, p)
 
     # send results back to processor 0
+    [array produced by closeness_centrality] 
+    back to processor 0
+ 
+    comm.send(x, 0, tag=0)
 
     # processor 0 prints closeness centrality for all nodes to output.txt
 

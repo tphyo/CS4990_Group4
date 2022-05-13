@@ -78,13 +78,11 @@ if __name__ == '__main__':
     if rank == 0:
     	file.write("Closeness Centrality of all nodes: ")
     	for i in range(len(closeness_centrality_array)):
-    		total += closeness_centrality_array[i];
-    		file.write(closeness_centrality_array[i])
-    		file.write("\n")
+            total += closeness_centrality_array[i];
+            file.write(closeness_centrality_array[i])
+            file.write("\n")
 
     	average = total/len(closeness_centrality_array)
-
-
 
     # processor 0 prints nodes with top 5 centrality values to output.txt
     	file.write("Top 5 Closeness Centrality: ")
@@ -92,8 +90,8 @@ if __name__ == '__main__':
     	top5 = Nmaxelements(closeness_centrality_array, 5)
 
     	for j in range(len(top5)):
-    		file.write(top5[j])
-    		file.write("\n")
+            file.write(top5[j])
+            file.write("\n")
     # processor 0 prints average of all nodes' centrality values to output.txt
         file.write("Average of all nodes: ")
     	file.write("\n")

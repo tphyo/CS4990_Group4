@@ -67,9 +67,7 @@ if __name__ == '__main__':
 
     closeness_centrality(G, n, p)
 
-    # send results back to processor 0
-    [array produced by closeness_centrality] 
-    back to processor 0
+    # send results back to processor 0 [array produced by closeness_centrality] back to processor 0
  
     comm.send(x, 0, tag=0)
 

@@ -4,65 +4,54 @@
 from mpi4py import MPI
 import numpy as np
 import networkx as nx
-from queue import PriorityQueue
-from collections import defaultdict
-import heapq as heap
+import heapdict
 
-def dijkstra(G, start, goal):
-    """ Uniform-cost search / dijkstra """
-    visited = set()
-    cost = {start: 0}
-    parent = {start: None}
-    todo = PriorityQueue()
+def dijkstra(G, source):
+    distance = [float('inf')] * G.number_of_nodes()
+    distance[source] = 0
+    # previous = [None] * G.number_of_nodes()
+    priority_queue = heapdict.heapdict()    # priority queue dictionary with node as key and priority as value
 
-    todo.put((0, start))
-    while todo:
-        while not todo.empty():
-            _, vertex = todo.get()  # finds lowest cost vertex
-            # loop until we get a fresh vertex
-            if vertex not in visited:
-                break
-        else:  # if todo ran out
-            break  # quit main loop
-        visited.add(vertex)
-        if vertex == goal:
-            break
-        for neighbor, distance in G.nodes:
-            if neighbor in visited:
-                continue  # skip these to save time
-            old_cost = cost.get(neighbor, float('inf'))  # default to infinity
-            new_cost = cost[vertex] + distance
-            if new_cost < old_cost:
-                todo.put((new_cost, neighbor))
-                cost[neighbor] = new_cost
-                parent[neighbor] = vertex
+    # add all nodes to priority queue with their distance from source node as the priority
+    for node in G:
+        priority_queue[int(node)] = distance[int(node)]
 
-    return cost
+    while len(priority_queue) != 0:
+        u = priority_queue.popitem()[0]     # u is the node with the least distance from source node
+        for v in G.neighbors(str(u)):       # iterate over neighbors of node u
+            if int(v) in priority_queue:         # check if the node v is in the priority queue
+                alt = distance[u] + 1
+                if alt < distance[int(v)]:
+                    distance[int(v)] = alt
+                    # previous[v] = u
+                    priority_queue.__delitem__(int(v))
+                    priority_queue[int(v)] = alt
+
+    return distance
+
 
 def closeness_centrality(G, n, p):
     rank = comm.Get_rank()
     first_node = rank * (n // p)
     last_node = (rank + 1) * (n // p) - 1
     results = []
-    count = 0
 
-    for i in range(first_node, last_node):
+    for i in range(first_node, last_node + 1):
         # calculate shortest paths for node i using dijkstra's
-        for j in range(0, n):
-            shortest_paths = dijkstra(G, i, j)
+        shortest_paths = dijkstra(G, i)
+        print('shortest paths for node', i)
+        print(shortest_paths)
 
-        # calculate closeness centrality for node i
-        closeness_centrality = 0
-        for j in range(n - 1):
-            closeness_centrality += shortest_paths[j]
-        closeness_centrality *= 1 / (n - 1)
-        closeness_centrality = 1 / closeness_centrality
+        # add up all shortest paths
+        total_shortest_paths = 0
+        for j in shortest_paths:
+            total_shortest_paths += j
 
-        results[count] = closeness_centrality
-        count += 1
+        # calculate closeness centrality for node i and add to results list
+        closeness_centrality = 1 / (total_shortest_paths / (n - 1))
+        results.append(closeness_centrality)
 
     return results
-
 
 def N_max_elements(list, N):
     result_list = []
@@ -85,19 +74,18 @@ if __name__ == '__main__':
     size = comm.Get_size()
     rank = comm.Get_rank()
 
-    pathname = 'facebook_combined.txt'
+    pathname = 'test_network.txt'
 
-    # read in the edge list and create a directed graph
-    G = nx.read_edgelist(path=pathname, create_using=nx.DiGraph)
+    # read in the edge list and create an directed graph
+    G = nx.read_edgelist(path=pathname)
 
     # find closeness centrality
     closeness_results = closeness_centrality(G, G.number_of_nodes(), size)
 
     # send results back to processor 0 [array produced by closeness_centrality] back to processor 0
     if rank == 0:
-        result = []
         for i in range(1, size):
-            result.append(comm.recv(i, tag=i))
+            closeness_results.extend(comm.recv(i, tag=i))
     elif rank > 0:
         comm.send(closeness_results, 0, tag=rank)
 
@@ -106,10 +94,11 @@ if __name__ == '__main__':
         total = 0
 
         # processor 0 prints closeness centrality for all nodes to output.txt
-        file.write("Closeness Centrality of all nodes: ")
+        file.write("Closeness Centrality of all nodes: \n")
         for i in range(len(closeness_results)):
+            print(i, ' ', closeness_results[i])
             total += closeness_results[i];
-            file.write(closeness_results[i])
+            file.write(str(closeness_results[i]))
             file.write("\n")
 
         average = total / len(closeness_results)
@@ -119,11 +108,11 @@ if __name__ == '__main__':
         file.write("\n")
         top5 = N_max_elements(closeness_results, 5)
         for j in range(len(top5)):
-            file.write(top5[j])
+            file.write(str(top5[j]))
             file.write("\n")
 
         # processor 0 prints average of all nodes' centrality values to output.txt
         file.write("Average of all nodes: ")
         file.write("\n")
-        file.write(average)
+        file.write(str(average))
         file.write("\n")

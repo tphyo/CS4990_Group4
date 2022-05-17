@@ -5,6 +5,9 @@ from mpi4py import MPI
 import numpy as np
 import networkx as nx
 import heapdict
+import time
+# import warnings
+
 
 def dijkstra(G, source):
     distance = [float('inf')] * G.number_of_nodes()
@@ -39,8 +42,8 @@ def closeness_centrality(G, n, p):
     for i in range(first_node, last_node + 1):
         # calculate shortest paths for node i using dijkstra's
         shortest_paths = dijkstra(G, i)
-        print('shortest paths for node', i)
-        print(shortest_paths)
+        # print('shortest paths for node', i)
+        # print(shortest_paths)
 
         # add up all shortest paths
         total_shortest_paths = 0
@@ -70,11 +73,13 @@ def N_max_elements(list, N):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+
+    start = time.time()
     comm = MPI.COMM_WORLD
     size = comm.Get_size()
     rank = comm.Get_rank()
 
-    pathname = 'test_network.txt'
+    pathname = 'facebook_combined.txt'
 
     # read in the edge list and create an directed graph
     G = nx.read_edgelist(path=pathname)
@@ -85,7 +90,7 @@ if __name__ == '__main__':
     # send results back to processor 0 [array produced by closeness_centrality] back to processor 0
     if rank == 0:
         for i in range(1, size):
-            closeness_results.extend(comm.recv(i, tag=i))
+            closeness_results.extend(comm.recv(5000, tag=i))
     elif rank > 0:
         comm.send(closeness_results, 0, tag=rank)
 
@@ -96,11 +101,11 @@ if __name__ == '__main__':
         # processor 0 prints closeness centrality for all nodes to output.txt
         file.write("Closeness Centrality of all nodes: \n")
         for i in range(len(closeness_results)):
-            print(i, ' ', closeness_results[i])
+            # print(i, ' ', closeness_results[i])
             total += closeness_results[i];
             file.write(str(closeness_results[i]))
             file.write("\n")
-
+        file.write("\n")
         average = total / len(closeness_results)
 
         # processor 0 prints nodes with top 5 centrality values to output.txt
@@ -110,9 +115,14 @@ if __name__ == '__main__':
         for j in range(len(top5)):
             file.write(str(top5[j]))
             file.write("\n")
+        file.write("\n")
 
         # processor 0 prints average of all nodes' centrality values to output.txt
         file.write("Average of all nodes: ")
         file.write("\n")
         file.write(str(average))
         file.write("\n")
+
+        end = time.time()
+
+        print("execution time: " + str(end-start) + " seconds.")
